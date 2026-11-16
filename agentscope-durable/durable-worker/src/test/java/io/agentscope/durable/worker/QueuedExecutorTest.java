@@ -53,6 +53,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.UUID;
@@ -60,6 +61,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 
 class QueuedExecutorTest {
     @TempDir Path directory;
@@ -563,6 +566,25 @@ class QueuedExecutorTest {
             assertThrows(
                     DurableException.class,
                     () -> hands.receive(ExecutionMessages.event(request, 1, completed)));
+        }
+    }
+
+    @Test
+    @ResourceLock(Resources.LOCALE)
+    void eventKeysStayAsciiSoACrossLocaleRestartStillFindsPendingEvents() {
+        Path file = directory.resolve("locale.db");
+        var original = Locale.getDefault();
+        try (var records = open(file)) {
+            var store = new TransactionalExecutionStore(records);
+            try {
+                Locale.setDefault(Locale.forLanguageTag("ar-EG"));
+                store.receive(ExecutionMessages.command(Kind.EXECUTE, request));
+            } finally {
+                Locale.setDefault(original);
+            }
+            var key = store.keys(null, 1).get(0);
+            var event = store.pendingEvent(key).orElseThrow();
+            assertEquals(1, event.sequence());
         }
     }
 }

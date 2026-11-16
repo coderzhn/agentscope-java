@@ -29,6 +29,7 @@ import io.agentscope.durable.Executor;
 import io.agentscope.durable.SessionBackend;
 import io.agentscope.durable.store.RecordStore;
 import java.time.Duration;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -151,11 +152,11 @@ public final class QueuedExecutor implements Executor {
     }
 
     private static String eventKey(long sequence) {
-        return "event:" + String.format("%020d", sequence);
+        return "event:" + String.format(Locale.ROOT, "%020d", sequence);
     }
 
     private static String outputKey(long offset) {
-        return "output:" + String.format("%020d", offset);
+        return "output:" + String.format(Locale.ROOT, "%020d", offset);
     }
 
     public void receive(Event event) {

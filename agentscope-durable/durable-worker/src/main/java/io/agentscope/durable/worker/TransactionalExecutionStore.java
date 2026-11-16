@@ -32,6 +32,7 @@ import io.agentscope.durable.ExecutionMessages.Kind;
 import io.agentscope.durable.store.RecordStore;
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -157,7 +158,7 @@ public final class TransactionalExecutionStore implements ExecutionStore {
     }
 
     private static String eventKey(long sequence) {
-        return "event:" + String.format("%020d", sequence);
+        return "event:" + String.format(Locale.ROOT, "%020d", sequence);
     }
 
     private static void emit(State state, ExecutionResult result, OutputPage output) {
